@@ -80,18 +80,15 @@ uint8_t help ()
    );
 }
 
-/* jbot_main ****************************************************************/
-uint8_t ZLX_CALL jbot_main (unsigned int argc, uint8_t const * const * argv)
+static uint8_t ZLX_CALL run 
+(
+    unsigned int argc,
+    uint8_t const * const * argv,
+    uint8_t const * * a
+)
 {
     unsigned int n, i, j, parse_opts = 1;
     uint8_t const * cmd = NULL;
-    uint8_t const * * a;
-    
-    HBS_DM("argc: $i; hbs_ma=$p", argc, hbs_ma);
-    ZLX_ASSERT(argc > 0);
-
-    a = hbs_alloc(argc * sizeof(uint8_t const *), "cmd args");
-    if (!a) E(125, "error: no mem for processing arguments\n");
 
     for (n = 0, i = 1; i < argc; ++i)
     {
@@ -132,5 +129,24 @@ uint8_t ZLX_CALL jbot_main (unsigned int argc, uint8_t const * const * argv)
     }
 
     return 0;
+}
+
+
+/* jbot_main ****************************************************************/
+uint8_t ZLX_CALL jbot_main (unsigned int argc, uint8_t const * const * argv)
+{
+    uint8_t r;
+    uint8_t const * * a;
+    
+    HBS_DM("argc: $i; hbs_ma=$p", argc, hbs_ma);
+    ZLX_ASSERT(argc > 0);
+
+    a = hbs_alloc(argc * sizeof(uint8_t const *), "cmd args");
+    if (!a) E(125, "error: no mem for processing arguments\n");
+
+    r = run(argc, argv, a);
+
+    hbs_free(a, argc * sizeof(uint8_t const *));
+    return r;
 }
 
