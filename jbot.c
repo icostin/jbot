@@ -1,11 +1,8 @@
 #include <zlx.h>
 #include <hbs.h>
+#include "jbot.h"
 
 HBS_MAIN(jbot_main);
-
-#define S(_s) ((uint8_t const *) _s)
-
-#define E(_rv, ...) do { zlx_fprint(hbs_err, __VA_ARGS__); return (_rv); } while (0)
 
 /* fchunk *******************************************************************/
 uint8_t ZLX_CALL fchunk (uint8_t const * path, uint64_t ofs, uint64_t len)
@@ -48,7 +45,7 @@ uint8_t ZLX_CALL fchunk (uint8_t const * path, uint64_t ofs, uint64_t len)
         if ((size_t) r != chunk_size)
         {
             hbs_file_close(zf);
-            E(6, "fchunk error: not enough data available (read $q=$xq)\n", 
+            E(6, "fchunk error: not enough data available (read $q=$xq)\n",
               t, t);
         }
     }
@@ -74,13 +71,14 @@ uint8_t help ()
    "  help                      prints this\n"
    "  version                   prints the version of this tool\n"
    "  fchunk FILE OFS LEN       outputs a chunk from a file\n"
+   "  elal-test ES MCL AC FC    tests element lookaside list allocator\n"
    "options:\n"
    " -h --help                  prints this and exits\n"
    "    --version               prints the version of this tool and exits\n"
    );
 }
 
-static uint8_t ZLX_CALL run 
+static uint8_t ZLX_CALL run
 (
     unsigned int argc,
     uint8_t const * const * argv,
@@ -122,22 +120,36 @@ static uint8_t ZLX_CALL run
         if (n != 3) E(125, "invoke error: fchunk needs 3 args\n");
 
         if (zlx_u64_from_str(a[1], zlx_u8a_zlen(a[1]), 0, &ofs, NULL))
-            E(125, "invoke error: bad number '$es'\n", a[3]);
+            E(125, "invoke error: bad number '$es'\n", a[1]);
         if (zlx_u64_from_str(a[2], zlx_u8a_zlen(a[2]), 0, &len, NULL))
             E(125, "invoke error: bad number '$s'\n", a[2]);
         return fchunk(a[0], ofs, len);
     }
+    else if (!zlx_u8a_zcmp(cmd, S("elal-test")))
+    {
+        uint64_t elem_size, mcl, ac, fc;
+        if (n != 4) E(125, "invoke error: elal-test needs 4 args\n");
+        if (zlx_u64_from_str(a[0], zlx_u8a_zlen(a[0]), 0, &elem_size, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[0]);
+        if (zlx_u64_from_str(a[1], zlx_u8a_zlen(a[1]), 0, &mcl, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[1]);
+        if (zlx_u64_from_str(a[2], zlx_u8a_zlen(a[2]), 0, &ac, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[2]);
+        if (zlx_u64_from_str(a[3], zlx_u8a_zlen(a[3]), 0, &fc, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[3]);
+        return test_elal((size_t) elem_size, (uint32_t) mcl,
+                         (size_t) ac, (size_t) fc);
+    }
 
     return 0;
 }
-
 
 /* jbot_main ****************************************************************/
 uint8_t ZLX_CALL jbot_main (unsigned int argc, uint8_t const * const * argv)
 {
     uint8_t r;
     uint8_t const * * a;
-    
+
     HBS_DM("argc: $i; hbs_ma=$p", argc, hbs_ma);
     ZLX_ASSERT(argc > 0);
 
