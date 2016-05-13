@@ -61,6 +61,16 @@ uint8_t logo ()
  "jbot - just a bunch of tests -- ver 0.00\n");
 }
 
+uint8_t ver ()
+{
+    if (logo()) return 1;
+    if (zlx_fprint(hbs_out, "using $s\nusing $s\n", 
+                   zlx_lib_name, hbs_lib_name) < 0)
+        return 1;
+    return 0;
+}
+
+
 /* help *********************************************************************/
 uint8_t help ()
 {
@@ -97,7 +107,7 @@ static uint8_t ZLX_CALL run
                 if (argv[i][2] == 0) { parse_opts = 0; continue; }
                 /* long option */
                 if (!zlx_u8a_zcmp(&argv[i][2], S("help"))) return help();
-                if (!zlx_u8a_zcmp(&argv[i][2], S("version"))) return logo();
+                if (!zlx_u8a_zcmp(&argv[i][2], S("version"))) return ver();
                 E(124, "invoke error: unknown long option '$es'\n", argv[i]);
             }
             for (j = 1; argv[i][j]; ++j)
@@ -112,6 +122,7 @@ static uint8_t ZLX_CALL run
     }
 
     if (!cmd || !zlx_u8a_zcmp(cmd, S("help"))) return help();
+    if (!zlx_u8a_zcmp(cmd, S("ver"))) return ver();
 
     if (!zlx_u8a_zcmp(cmd, S("fchunk")))
     {
