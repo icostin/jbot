@@ -61,10 +61,11 @@ uint8_t logo ()
  "jbot - just a bunch of tests -- ver 0.00\n");
 }
 
+/* ver **********************************************************************/
 uint8_t ver ()
 {
     if (logo()) return 1;
-    if (zlx_fprint(hbs_out, "using $s\nusing $s\n", 
+    if (zlx_fprint(hbs_out, "using $s\nusing $s\n",
                    zlx_lib_name, hbs_lib_name) < 0)
         return 1;
     return 0;
@@ -82,12 +83,15 @@ uint8_t help ()
    "  version                   prints the version of this tool\n"
    "  fchunk FILE OFS LEN       outputs a chunk from a file\n"
    "  elal-test ES MCL AC FC    tests element lookaside list allocator\n"
+   "  mth-inc-test [-x] T I     T threads each increment I times a global;\n"
+   "                            use '-x' switch to use dummy mutex locking\n"
    "options:\n"
    " -h --help                  prints this and exits\n"
    "    --version               prints the version of this tool and exits\n"
    );
 }
 
+/* run **********************************************************************/
 static uint8_t ZLX_CALL run
 (
     unsigned int argc,
@@ -148,8 +152,20 @@ static uint8_t ZLX_CALL run
             E(125, "invoke error: bad number '$es'\n", a[2]);
         if (zlx_u64_from_str(a[3], zlx_u8a_zlen(a[3]), 0, &fc, NULL))
             E(125, "invoke error: bad number '$es'\n", a[3]);
-        return test_elal((size_t) elem_size, (uint32_t) mcl,
+        return elal_test((size_t) elem_size, (uint32_t) mcl,
                          (size_t) ac, (size_t) fc);
+    }
+    else if (!zlx_u8a_zcmp(cmd, S("mth-inc-test")))
+    {
+        uint8_t fake_mutex = 0;
+        uint64_t th_count, inc_count;
+        if (n && !zlx_u8a_zcmp(a[0], S("-x"))) { fake_mutex = 1; --n; ++a; }
+        if (n != 2) E(125, "invoke error: mth-inc-test needs 2 counters\n");
+        if (zlx_u64_from_str(a[0], zlx_u8a_zlen(a[0]), 0, &th_count, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[0]);
+        if (zlx_u64_from_str(a[1], zlx_u8a_zlen(a[1]), 0, &inc_count, NULL))
+            E(125, "invoke error: bad number '$es'\n", a[1]);
+        return mth_inc_test(th_count, inc_count, fake_mutex);
     }
 
     return 0;

@@ -53,7 +53,7 @@ static uint8_t ZLX_CALL test
     return 0;
 }
 
-uint8_t ZLX_CALL test_elal 
+uint8_t ZLX_CALL elal_test
 (
     size_t elem_size,
     uint32_t max_chain_len,
